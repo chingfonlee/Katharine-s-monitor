@@ -1,30 +1,32 @@
 name: 排程測試（不連網站）
 
-# 只印出被觸發的時間，不會請求 kaofarmers.tw，用來觀察排程實際落在哪些時間。
-# 測完請到 Actions 頁面停用（Disable workflow）或刪掉此檔。
-
+# 只用來觀察排程實際落在幾點，完全不請求 kaofarmers.tw，不會增加瀏覽數。
+# 測完請刪除這個檔案，避免白白用掉免費分鐘數。
 on:
   schedule:
-    - cron: "7,41 0-9 * * *"            # 20 次
-    - cron: "13 0-23 * * *"             # 24 次
-    - cron: "29 1,5,9,13,17,21 * * *"   # 6 次
+    - cron: "7,41 0-9 * * *"
+    - cron: "13 0-23 * * *"
+    - cron: "29 1,5,9,13,17,21 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  ping:
+  log:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: 記錄觸發時間
         run: |
-          echo "事件：${{ github.event_name }}"
+          echo "觸發方式：${{ github.event_name }}"
+          echo "排程設定：${{ github.event.schedule }}"
           echo "UTC 時間：$(date -u '+%F %T')"
           echo "台灣時間：$(TZ=Asia/Taipei date '+%F %T')"
           {
-            echo "| 事件 | 台灣時間 |"
+            echo "| 項目 | 值 |"
             echo "|---|---|"
-            echo "| ${{ github.event_name }} | $(TZ=Asia/Taipei date '+%F %T') |"
+            echo "| 觸發方式 | ${{ github.event_name }} |"
+            echo "| 排程設定 | ${{ github.event.schedule }} |"
+            echo "| 台灣時間 | $(TZ=Asia/Taipei date '+%F %T') |"
           } >> "$GITHUB_STEP_SUMMARY"
