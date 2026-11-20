@@ -1,7 +1,8 @@
 name: 排程測試（不連網站）
 
 # 只用來觀察排程實際落在幾點，完全不請求 kaofarmers.tw，不會增加瀏覽數。
-# 測完請刪除這個檔案，避免白白用掉免費分鐘數。
+# 每次觸發會在 repo 的 schedule_log.csv 追加一列，方便確認排程有沒有真的執行。
+# 測完請刪除這個檔案，避免白白用掉免費額度。
 on:
   schedule:
     - cron: "7,41 0-9 * * *"
@@ -10,23 +11,40 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # 需要把 CSV 寫回 repo
+
+concurrency:
+  group: schedule-log # 避免兩次同時執行時互相衝突
+  cancel-in-progress: false
 
 jobs:
   log:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
-      - name: 記錄觸發時間
+      - uses: actions/checkout@v4
+
+      - name: 追加一列到 schedule_log.csv
         run: |
-          echo "觸發方式：${{ github.event_name }}"
-          echo "排程設定：${{ github.event.schedule }}"
-          echo "UTC 時間：$(date -u '+%F %T')"
-          echo "台灣時間：$(TZ=Asia/Taipei date '+%F %T')"
+          FILE=schedule_log.csv
+          if [ ! -f "$FILE" ]; then
+            printf '\xEF\xBB\xBF' > "$FILE"
+            echo "觸發方式,排程設定,UTC時間,台灣時間" >> "$FILE"
+          fi
+          echo "${{ github.event_name }},\"${{ github.event.schedule }}\",$(date -u '+%F %T'),$(TZ=Asia/Taipei date '+%F %T')" >> "$FILE"
+          tail -n 3 "$FILE"
           {
-            echo "| 項目 | 值 |"
-            echo "|---|---|"
-            echo "| 觸發方式 | ${{ github.event_name }} |"
-            echo "| 排程設定 | ${{ github.event.schedule }} |"
-            echo "| 台灣時間 | $(TZ=Asia/Taipei date '+%F %T') |"
+            echo "### 已寫入 schedule_log.csv"
+            echo '```'
+            tail -n 5 "$FILE"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 寫回 repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add schedule_log.csv
+          git commit -m "log: 排程測試紀錄 ${{ github.event_name }}"
+          git pull --rebase origin main
+          git push
