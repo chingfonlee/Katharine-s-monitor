@@ -94,6 +94,24 @@ def main(urls: list[str] = URLS) -> bool:
         print(f"本期瀏覽次數：{max(views)}（本次檢查自己貢獻了 {ok} 次）")
     print(f"結果已存到 {out}")
 
+    # 累積歷史：每次檢查追加一列到 view_history.csv（GitHub 上會被寫回 repo，直接看得到）
+    history = "view_history.csv"
+    new_file = not os.path.exists(history)
+    failed = [r["url"].rsplit("/", 1)[-1] for r in results if r["連線"] != "成功"]
+    with open(history, "a", newline="", encoding="utf-8-sig" if new_file else "utf-8") as f:
+        w = csv.writer(f)
+        if new_file:
+            w.writerow(["台灣時間", "觸發方式", "連線成功", "網址總數", "本期瀏覽次數", "失敗網址"])
+        w.writerow([
+            f"{now:%Y-%m-%d %H:%M:%S}",
+            os.environ.get("GITHUB_EVENT_NAME", "local"),
+            ok,
+            len(results),
+            max(views) if views else "",
+            " ".join(failed),
+        ])
+    print(f"歷史已追加到 {history}")
+
     # 在 GitHub Actions 上執行時，把結果表格顯示在執行頁面上（手機也看得到）
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
