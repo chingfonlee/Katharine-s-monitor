@@ -15,18 +15,20 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
 
       - name: 安裝套件
-        run: pip install httpx
+        run: pip install -r requirements.txt
 
-      - name: 檢查 12 個網址的連線與瀏覽次數
+      - name: 檢查 26 個網址的連線與瀏覽次數（Vol.54 + Vol.53）
         run: python check_status.py
 
       - name: 把歷史紀錄 view_history.csv 寫回 repo
