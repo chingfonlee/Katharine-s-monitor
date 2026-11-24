@@ -1,5 +1,3 @@
-"""?冽璈芋?砌撩?皜祈岫 check_status.py??
-璅⊥隡箸??典??喟? HTML 靘 kaofarmers.tw ?祕??蝣潛?蝯?嚗?銝行芋?研ol.54嚗paper/66嚗? Vol.53嚗paper/65嚗??芣??蝡汗閮?具?甈?GET +1??銵??"""
 import csv
 import os
 import sys
@@ -8,23 +6,20 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 os.environ["NO_PROXY"] = "127.0.0.1,localhost"
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-import check_status  # noqa: E402
+import check_status
 
 COUNTERS = {"66": 14603, "65": 46533}
 LOCK = threading.Lock()
 
-PAGE = """<!DOCTYPE html>
-<html lang="zh-Hant"><head><meta charset="utf-8" />
-<title>?嗆???-?噙?祈-?噙憭扯??/title></head><body>
-<div class="btn-group social_share" role="group">
-  <span class="py-3 me-2 text-secondary"><i class="fas fa-share-alt"></i>?澈??/span>
-  <a class="btn btn-line" href="#">LINE</a>
-</div>
-<span class="py-3 text-secondary">
-  <i class="fas fa-eye"></i>{views}甈?</span>
-<h3>??璅?</h3>
-<article><p>???潸牧嚗??????甈∠?撽蝚?甈∠宏???望鈭?00甈∟?蝞晞?/p></article>
-</body></html>"""
+PAGE = (
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /></head><body>'
+    '<div class="btn-group social_share" role="group">'
+    '<span class="py-3 me-2 text-secondary"><i class="fas fa-share-alt"></i>\u5206\u4eab\u81f3</span>'
+    "</div>"
+    '<span class="py-3 text-secondary"><i class="fas fa-eye"></i>{views}\u6b21</span>'
+    "<h3>Title</h3><article><p>Body text 3\u6b21 400\u6b21.</p></article>"
+    "</body></html>"
+)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -53,17 +48,15 @@ def main():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
-    # --- ?桀?皜祈岫嚗?祕?瑕??啁??挾 ---
-    real = '<span class="py-3 text-secondary"><i class="fas fa-eye"></i>14603甈?/span>'
+    real = '<span class="py-3 text-secondary"><i class="fas fa-eye"></i>14603\u6b21</span>'
     assert check_status.extract_views(real) == 14603
-    assert check_status.extract_views("<p>瘝?閮?剁??芣?蝚?甈?/p>") is None
-    assert check_status.extract_views('<i class="fas fa-eye"></i>1,234甈?) == 1234
+    assert check_status.extract_views("<p>No counter 3\u6b21</p>") is None
+    assert check_status.extract_views('<i class="fas fa-eye"></i>1,234\u6b21') == 1234
     assert len(check_status.ISSUES["Vol.54"]) == 13
     assert len(check_status.ISSUES["Vol.53"]) == 13
     assert len(check_status.URLS) == 26
-    print("extract_views ??26 蝬脣?閮剖??桀?皜祈岫嚗?")
+    print("Unit tests passed")
 
-    # --- ?游?皜祈岫嚗ol.54 (13) + Vol.53 (13) + 404 + ???銝?蝬脣? ---
     check_status.DELAY = 0.02
     test_issues = {
         "Vol.54": [
@@ -91,7 +84,7 @@ def main():
     assert last[2] == "26" and last[3] == "28"
     assert last[4] == "14616", f"Expected Vol.54=14616, got {last[4]}"
     assert last[6] == "46546", f"Expected Vol.53=46546, got {last[6]}"
-    print("???函?閮??view_history.csv ?游?皜祈岫嚗?")
+    print("Integration tests passed")
     srv.shutdown()
 
 
