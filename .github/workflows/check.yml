@@ -1,14 +1,8 @@
 name: 每日檢查型農本色連結
 
 on:
-  schedule:
-    # GitHub 排程用 UTC 時間：01:17 UTC = 台灣時間 09:17
-    # （避開整點，整點時 GitHub 排程常塞車延遲）
-    
-    - cron: "7,41 0-9 * * *"        # 10 個小時 × 2 次 = 20 次
-    - cron: "13 0-23 * * *"         # 每小時 1 次 = 24 次
-    - cron: "29 1,5,9,13,17,21 * * *"  # 6 次
-  
+  # 改由 Cloudflare Workers Cron (farmermage-cron) 每天 50 次穩定觸發
+  # （每小時 :22、:52 ＋ 台灣時間 00:44、12:44，與 nufantex/farmermage 錯開）
   workflow_dispatch: # 允許在 Actions 頁面手動按「Run workflow」
 
 permissions:
